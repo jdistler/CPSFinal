@@ -16,8 +16,6 @@ using namespace std;
 clock_t t_begin = 0;
 #endif
 
-int mycount = 0;
-
 void cv_process_img(const cv::Mat& input_img, cv::Mat& output_img)
 {
 	cv::Mat gray_img;
@@ -119,24 +117,21 @@ void cv_color_tracking(const cv::Mat& bgr_image)
 
         int third = width / 3.0;
 
-	mycount += 1;
 	char* myID = new char;
 	gen_random(myID, 5);
-
-	
 
         if(center.x < third){
            // car is right of circle
            cout << "Right" << endl;
-           myfile << "Right "<< mycount << myID << "\n";
+           myfile << "ID: " << myID << " Command: Right" << "\n";
         }else if(center.x < third*2){
            // car is in front of circle
            cout << "Front" << endl;
-           myfile << "Front " << mycount << myID << "\n";
+           myfile << "ID: " << myID << " Command: Front" << "\n";
         }else{
            // car is left of circle
           cout << "Left" << endl;
-          myfile << "Left " << mycount << myID << "\n";
+          myfile << "ID: " << myID << " Command: Left" << "\n";
        }
 
     }
