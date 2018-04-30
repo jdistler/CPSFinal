@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-
+import time
 import rospy
 from race.msg import drive_param
 from race.msg import pid_input
@@ -11,11 +11,11 @@ cache = set()
 
 kp = 250
 kd = 0
-vel_input = 30
+vel_input = 17
 
 # Update the variable below to change distance from wall
-# 1 foot offset
-OFFSET = 0.16
+# 1 foot offset is 0.16, bigger is closer to wall
+OFFSET = 0.35
 
 pub = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
 
@@ -48,12 +48,13 @@ def control(data):
     if circle_detected:
         print "Circle Detected"
         # ignore any of the wall distance correction logic, just set angle, velocity and publish
-        angle = 100
+        angle = -170
         msg = drive_param()
         msg.velocity = vel_input
         msg.angle = angle
         print "PUBLISHING MESSAGE: " + str(msg)
         pub.publish(msg)
+	time.sleep(1)
     else:
         print "Circle Not Detected"
         data.pid_error = data.pid_error + OFFSET
@@ -66,6 +67,7 @@ def control(data):
         msg = drive_param()
         if data.pid_vel == 0:
             msg.velocity = -8
+	    angle = 0
         else:
             msg.velocity = vel_input
 
