@@ -2,6 +2,7 @@
 
 import os
 import time
+
 import rospy
 from race.msg import drive_param
 from race.msg import pid_input
@@ -54,7 +55,7 @@ def control(data):
         msg.angle = angle
         print "PUBLISHING MESSAGE: " + str(msg)
         pub.publish(msg)
-	time.sleep(1)
+        time.sleep(1)
     else:
         print "Circle Not Detected"
         data.pid_error = data.pid_error + OFFSET
@@ -67,7 +68,7 @@ def control(data):
         msg = drive_param()
         if data.pid_vel == 0:
             msg.velocity = -8
-	    angle = 0
+            angle = 0
         else:
             msg.velocity = vel_input
 
