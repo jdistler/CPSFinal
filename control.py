@@ -18,6 +18,11 @@ vel_input = 17
 # 1 foot offset is 0.16, bigger is closer to wall
 OFFSET = 0.35
 
+turn_right_count = 0
+turn_left_count = 0
+
+wall_is_to_the_right = True
+
 pub = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
 
 
@@ -26,6 +31,9 @@ def control(data):
     global kp
     global kd
     global OFFSET
+    global turn_right_count
+    global turn_left_count
+    global wall_is_to_the_right
 
     circle_detected = False
 
@@ -49,21 +57,58 @@ def control(data):
     if circle_detected:
         print "Circle Detected"
         # ignore any of the wall distance correction logic, just set angle, velocity and publish
-        angle = -170
+        if wall_is_to_the_right:
+            angle = -170
+        else:
+            angle = 170
+
         msg = drive_param()
         msg.velocity = vel_input
         msg.angle = angle
         print "PUBLISHING MESSAGE: " + str(msg)
         pub.publish(msg)
+
+        turn_right_count = 0
+        turn_left_count = 0
+
         time.sleep(1)
     else:
         print "Circle Not Detected"
         data.pid_error = data.pid_error + OFFSET
         angle = data.pid_error * kp
+        # check if the car would have corrected to the left or right due to presence of a wall
+        # angle = -100 produces a left turn
+
         if angle > 100:
             angle = 100
+            turn_right_count += 1
+            print "ROBOT CORRECTING, TURNING RIGHT"
         if angle < -100:
             angle = -100
+            turn_left_count += 1
+            print "ROBOT CORRECTING, TURNING LEFT"
+
+            # the following are experimental values, we need to run tests with robot to find out correct buffers
+            # I just guessed that 5 commands in one direction is a strong signal of where the wall may be.
+            # In actuality, the robot may fishtail back and forth when correcting so these values might be off.
+
+            # if more than 5 commands indicate to correct right, wall is probably on the left
+            if turn_right_count > 5:
+                wall_is_to_the_right = False
+
+                # reset buffers
+                turn_right_count = 0
+                turn_left_count = 0
+                print "WALL IS PROBABLY TO THE LEFT"
+
+            # if more than 5 commands indicate to correct left, wall is probably on the right
+            if turn_left_count > 5:
+                wall_is_to_the_right = True
+
+                # reset buffers
+                turn_right_count = 0
+                turn_left_count = 0
+                print "WALL IS PROBABLY TO THE RIGHT"
 
         msg = drive_param()
         if data.pid_vel == 0:
